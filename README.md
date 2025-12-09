@@ -1,9 +1,16 @@
-# Gemini Video Transcriber
-
-A simple CLI tool to transcribe videos into pure text using Google's Gemini 3 Pro model via Vertex AI. Optimized for Ukrainian language support.
+# GeminiA simple CLI tool to transcribe videos into pure text using Google's Gemini Pro models via Vertex AI. Optimized for Ukrainian language support.
 
 ## Feature Highlights
-- **Gemini 3 Pro Power**: Uses the latest multimodal capabilities for high-accuracy transcription.
+- **Gemini Pro Power**: Uses the latest multimodal capabilities for high-accuracy transcription.
+
+...
+
+| `--model` | Gemini Model version. | Latest stable (check `src/transcribe.py`) |
+| `--preview` | Shorthand to use the latest Preview model. | False |
+
+...
+
+- **"Model not found"**: Ensure the default model is available in your selected region. Try `us-central1`.
 - **Pure Text Output**: Delivers clean text directly to your console (standard output).
 - **Ukrainian Native**: Prompts are tuned to recognize and handle Ukrainian speech fluently.
 - **Cross-Platform**: Runs on macOS (Apple Silicon optimized) and Linux (Ubuntu).
@@ -42,22 +49,25 @@ python3 src/transcribe.py workspace/input/video.mp4
 ```
 
 ### Output
-The transcribed text will be saved in two locations:
-1.  **Local**: `workspace/output/` with a sanitized filename.
-2.  **GCS**: Uploaded to a bucket named `{project_id}-gemini-video-transcribe`.
+The tool uses a persistent GCS bucket: `{project_id}-gemini-video-transcribe`.
+
+1.  **Local Output**: Saved to `workspace/output/`.
+2.  **GCS Output**:
+    *   **Input Videos**: Stored in `gs://{bucket}/inputs/` (Persistence: **On** by default).
+    *   **Transcripts**: Stored in `gs://{bucket}/outputs/`.
 
 ### Options
 
 | Flag | Description | Default |
 |------|-------------|---------|
 | `file_path` | (Positional) Local path to the video file. | N/A |
-| `--bucket` | Name of your GCS bucket. If omitted, a temporary bucket is created automatically. | Auto-generated (`gemini-transcriber-{project}-{region}`) |
+| `--bucket` | Custom GCS bucket name. If omitted, uses `{project_id}-gemini-video-transcribe`. | Auto-generated |
 | `--project` | GCP Project ID. Optional if set in gcloud config. | Auto-detected |
 | `--location` | Vertex AI Region. | Auto-detected from `gcloud config` (default fallback: `us-central1`) |
-| `--model` | Gemini Model version. | `gemini-2.5-pro` |
-| `--preview` | Shorthand to use Gemini 3 Pro Preview model. | False |
+| `--model` | Gemini Model version. | Current Default (see code) |
+| `--preview` | Shorthand to use the latest Preview model. | False |
 | `--api-key` | Google AI Studio / Vertex AI API Key. Overrides `gcloud` auth. | None |
-| `--keep-gcs` | Skip deleting the staging file from GCS. | False |
+| `--keep-gcs` | (Deprecated/No-op) Files are now kept by default. | True |
 
 ### Examples
 
@@ -73,7 +83,7 @@ python3 src/transcribe.py workspace/input/video.mp4 --api-key "YOUR_API_KEY"
 
 ## Troubleshooting
 
-- **"Model not found"**: Ensure the model (default `gemini-2.5-pro`) is available in your selected region. Try `us-central1`.
+- **"Model not found"**: Ensure the configured model is available in your selected region. Try `us-central1` or check for typos if specifying a custom model.
 - **"403 Permission Denied"**: Check that your `gcloud auth application-default login` credential works and has `Storage Object Admin` and `Vertex AI User` roles.
 
 ## Roadmap / Next Steps

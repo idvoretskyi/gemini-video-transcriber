@@ -256,24 +256,23 @@ def main():
 
     print(f"Using Project: {project_id}, Region: {args.location}")
     
-    # Handle Staging Bucket
-    staging_bucket_name = args.bucket
-    if not staging_bucket_name:
-        staging_bucket_name = get_staging_bucket_name(project_id, args.location)
-        ensure_bucket(staging_bucket_name, args.location)
-    
-    # Handle Output Bucket
-    output_bucket_name = get_output_bucket_name(project_id)
-    ensure_bucket(output_bucket_name, args.location)
+    # Handle Bucket (Unified for input and output)
+    bucket_name = args.bucket
+    if not bucket_name:
+        # Default persistent bucket naming: {project_id}-gemini-video-transcribe
+        bucket_name = get_output_bucket_name(project_id)
+        ensure_bucket(bucket_name, args.location)
     
     file_name = os.path.basename(args.file_path)
-    blob_name = f"gemini-transcriber-staging/{int(time.time())}_{file_name}"
+    # Store inputs in inputs/ folder
+    blob_name = f"inputs/{int(time.time())}_{file_name}"
     
     # Upload first (required for Vertex AI, even with new SDK for large files)
     try:
-        gcs_uri = upload_to_gcs(staging_bucket_name, args.file_path, blob_name)
+        gcs_uri = upload_to_gcs(bucket_name, args.file_path, blob_name)
     except Exception as e:
          print(f"Error uploading to GCS: {e}")
+         print(f"Check if you have permissions or if the bucket '{bucket_name}' exists.")
          sys.exit(1)
 
     # Transcribe
@@ -312,7 +311,9 @@ def main():
         
         # 2. Save to GCS Output
         try:
-             gcs_output_uri = upload_text_to_gcs(output_bucket_name, output_filename, transcription_text)
+             # Store outputs in outputs/ folder
+             gcs_output_path = f"outputs/{output_filename}"
+             gcs_output_uri = upload_text_to_gcs(bucket_name, gcs_output_path, transcription_text)
              print(f"[GCS] Output uploaded to: {gcs_output_uri}")
         except Exception as e:
              print(f"Warning: Failed to upload output to GCS: {e}")
@@ -322,12 +323,16 @@ def main():
         import traceback
         traceback.print_exc()
         sys.exit(1)
-    finally:
-        if not args.keep_gcs:
-            try:
-                delete_blob(staging_bucket_name, blob_name)
-            except Exception as e:
-                print(f"Warning: Failed to cleanup GCS blob: {e}")
+        
+    # Cleanup Logic - Changed to PERSISTENT by default
+    # If user explicity wants to cleanup, they can... but we'll remove the auto-delete for now as requested.
+    # To re-enable cleanup, we could add a --cleanup flag, but for now we just respect the persistence.
+    if args.keep_gcs:
+        print(f"File kept in GCS: gs://{bucket_name}/{blob_name}")
+    else:
+        # Default behavior update: Keep file.
+        # Use simple print to inform.
+        print(f"Video file preserved in GCS: gs://{bucket_name}/{blob_name}")
 
 if __name__ == "__main__":
     main()
