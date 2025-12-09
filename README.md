@@ -1,16 +1,10 @@
-# GeminiA simple CLI tool to transcribe videos into pure text using Google's Gemini Pro models via Vertex AI. Optimized for Ukrainian language support.
+# Gemini Video Transcriber
+
+A simple CLI tool to transcribe videos into pure text using Google's Gemini Pro models via Vertex AI. Optimized for Ukrainian language support.
 
 ## Feature Highlights
+
 - **Gemini Pro Power**: Uses the latest multimodal capabilities for high-accuracy transcription.
-
-...
-
-| `--model` | Gemini Model version. | Latest stable (check `src/transcribe.py`) |
-| `--preview` | Shorthand to use the latest Preview model. | False |
-
-...
-
-- **"Model not found"**: Ensure the default model is available in your selected region. Try `us-central1`.
 - **Pure Text Output**: Delivers clean text directly to your console (standard output).
 - **Ukrainian Native**: Prompts are tuned to recognize and handle Ukrainian speech fluently.
 - **Cross-Platform**: Runs on macOS (Apple Silicon optimized) and Linux (Ubuntu).
